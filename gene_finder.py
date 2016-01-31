@@ -2,11 +2,12 @@
 """
 YOUR HEADER COMMENT HERE
 
-@author: YOUR NAME HERE
+@author: ELEANOR FUNKHOUSER
 
 """
 
 import random
+import doctest
 from amino_acids import aa, codons, aa_table   # you may find these useful
 from load import load_seq
 
@@ -30,9 +31,19 @@ def get_complement(nucleotide):
     >>> get_complement('C')
     'G'
     """
-    # TODO: implement this
-    pass
+    if nucleotide == "A":
+        return "T"
+    elif nucleotide == "T":
+        return "A"
+    elif nucleotide == "C":
+        return "G"
+    elif nucleotide == "G":
+        return "C"
+    else:
+        print "That's not a nucleotide or is the wrong format; get_complement is returning None"
+    
 
+doctest.run_docstring_examples(get_complement, globals())
 
 def get_reverse_complement(dna):
     """ Computes the reverse complementary sequence of DNA for the specfied DNA
@@ -45,9 +56,12 @@ def get_reverse_complement(dna):
     >>> get_reverse_complement("CCGCGTTCA")
     'TGAACGCGG'
     """
-    # TODO: implement this
-    pass
-
+    revComplement = "" #initialize as empty string - will be adding onto this in the loop
+    for index in range(len(dna)):
+        index = index + 1
+        compNucleotide = get_complement(dna[-1*index]) #Get the complement of the reverse (5') end
+        revComplement = revComplement + compNucleotide
+    return revComplement
 
 def rest_of_ORF(dna):
     """ Takes a DNA sequence that is assumed to begin with a start
@@ -62,9 +76,16 @@ def rest_of_ORF(dna):
     >>> rest_of_ORF("ATGAGATAGG")
     'ATGAGA'
     """
-    # TODO: implement this
-    pass
-
+    i = 0 #initialize index counter
+    dnaString = "" #initialize DNA; will add on 3 at a time in while loop
+    while (i+2)<len(dna):
+        codon = dna[i:(i+3)] #reading codon by codon
+        if codon=='TAG' or codon=='TAA' or codon=='TGA':
+            return dnaString
+            break
+        dnaString = dnaString + codon #if not stop, add it to the return string
+        i = i + 3
+    return dna #If no stop codon is found in frame
 
 def find_all_ORFs_oneframe(dna):
     """ Finds all non-nested open reading frames in the given DNA
@@ -79,8 +100,21 @@ def find_all_ORFs_oneframe(dna):
     >>> find_all_ORFs_oneframe("ATGCATGAATGTAGATAGATGTGCCC")
     ['ATGCATGAATGTAGA', 'ATGTGCCC']
     """
-    # TODO: implement this
-    pass
+    startCodon = 'ATG'
+    i = 0
+    ORF_list = []
+    while (i+3)<=len(dna):
+        codon = dna[i:(i+3)]
+        if codon==startCodon:
+            oneORF = rest_of_ORF(dna[i:])
+            ORF_list.append(oneORF) #Add the ORF to the list
+            i = i + len(oneORF) #On to the next one - no nested shit here
+            ### NOTE: This resetting of i assumes that the dna given to find_all_ORFs_oneframe DOES HAVE A STOP CODON SOMEWHERE
+        else:
+            i = i+3
+    return ORF_list
+
+
 
 
 def find_all_ORFs(dna):
@@ -96,8 +130,16 @@ def find_all_ORFs(dna):
     >>> find_all_ORFs("ATGCATGAATGTAG")
     ['ATGCATGAATGTAG', 'ATGAATGTAG', 'ATG']
     """
-    # TODO: implement this
-    pass
+    ans = []
+    ORF_1 = find_all_ORFs_oneframe(dna[:]) #returns list
+    ORF_2 = find_all_ORFs_oneframe(dna[1:])
+    ORF_3 = find_all_ORFs_oneframe(dna[2:])
+
+    ans = ans+ORF_1 #repetitive for debuggin purposes
+    ans = ans+ORF_2 #i'ma leave it for clarity's sake though
+    ans = ans+ORF_3
+
+    return ans
 
 
 def find_all_ORFs_both_strands(dna):
@@ -109,8 +151,15 @@ def find_all_ORFs_both_strands(dna):
     >>> find_all_ORFs_both_strands("ATGCGAATGTAGCATCAAA")
     ['ATGCGAATG', 'ATGCTACATTCGCAT']
     """
-    # TODO: implement this
-    pass
+    forwardDNA = dna
+    reverseDNA = get_reverse_complement(dna)
+
+    ans = []
+
+    ans = ans + find_all_ORFs(forwardDNA)
+    ans = ans + find_all_ORFs(reverseDNA)
+
+    return ans
 
 
 def longest_ORF(dna):
