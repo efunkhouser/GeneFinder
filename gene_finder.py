@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-YOUR HEADER COMMENT HERE
+Here it is! Week one (first six functions) complete.
+I added at least one unit test to all except find_all_ORFs and find_all_ORFs_both_strands, as I found those unit tests sufficient.
 
 @author: ELEANOR FUNKHOUSER
 
@@ -30,8 +31,12 @@ def get_complement(nucleotide):
     'T'
     >>> get_complement('C')
     'G'
+    >>> get_complement('G')
+    'C'
+    >>> get_complement('T')
+    'A'
     """
-    if nucleotide == "A":
+    if nucleotide == "A": #Pairs: A and T, C and G (2nd strand has complement of base)
         return "T"
     elif nucleotide == "T":
         return "A"
@@ -40,7 +45,7 @@ def get_complement(nucleotide):
     elif nucleotide == "G":
         return "C"
     else:
-        print "That's not a nucleotide or is the wrong format; get_complement is returning None"
+        print "That's not a nucleotide or is the wrong format; get_complement is returning None" #Just in case
     
 
 doctest.run_docstring_examples(get_complement, globals())
@@ -55,12 +60,14 @@ def get_reverse_complement(dna):
     'AAAGCGGGCAT'
     >>> get_reverse_complement("CCGCGTTCA")
     'TGAACGCGG'
+    >>> get_reverse_complement("ACCTTTGGGG")
+    'CCCCAAAGGT'
     """
     revComplement = "" #initialize as empty string - will be adding onto this in the loop
     for index in range(len(dna)):
         index = index + 1
         compNucleotide = get_complement(dna[-1*index]) #Get the complement of the reverse (5') end
-        revComplement = revComplement + compNucleotide
+        revComplement = revComplement + compNucleotide #Add the complmenent nucleotide onto the reverse string
     return revComplement
 
 def rest_of_ORF(dna):
@@ -75,15 +82,17 @@ def rest_of_ORF(dna):
     'ATG'
     >>> rest_of_ORF("ATGAGATAGG")
     'ATGAGA'
+    >>> rest_of_ORF("TAACG")
+    ''
     """
-    i = 0 #initialize index counter
+    i = 0 #initialize index to count bases
     dnaString = "" #initialize DNA; will add on 3 at a time in while loop
     while (i+2)<len(dna):
         codon = dna[i:(i+3)] #reading codon by codon
         if codon=='TAG' or codon=='TAA' or codon=='TGA':
-            return dnaString
+            return dnaString #Note that this does not include the stop codon, just everything leading up to it
             break
-        dnaString = dnaString + codon #if not stop, add it to the return string
+        dnaString = dnaString + codon #if not stop codon, add it to the return string
         i = i + 3
     return dna #If no stop codon is found in frame
 
@@ -99,19 +108,22 @@ def find_all_ORFs_oneframe(dna):
         returns: a list of non-nested ORFs
     >>> find_all_ORFs_oneframe("ATGCATGAATGTAGATAGATGTGCCC")
     ['ATGCATGAATGTAGA', 'ATGTGCCC']
+    >>> find_all_ORFs_oneframe("CATGCATTGATG")
+    ['ATCCAT']
     """
     startCodon = 'ATG'
-    i = 0
-    ORF_list = []
+    i = 0 #For counting bases
+    ORF_list = [] #Initializing the list that this function will return
+
     while (i+3)<=len(dna):
         codon = dna[i:(i+3)]
-        if codon==startCodon:
-            oneORF = rest_of_ORF(dna[i:])
-            ORF_list.append(oneORF) #Add the ORF to the list
-            i = i + len(oneORF) #On to the next one - no nested shit here
+        if codon==startCodon: #If the codon we're looking at is a start codon...
+            oneORF = rest_of_ORF(dna[i:]) #Get the ORF up to but not including the stop codon
+            ORF_list.append(oneORF) #Add the ORF to the return list
+            i = i + len(oneORF) #On to the next ORF - no nested shit here
             ### NOTE: This resetting of i assumes that the dna given to find_all_ORFs_oneframe DOES HAVE A STOP CODON SOMEWHERE
         else:
-            i = i+3
+            i = i+3 #If it's not a start codon, look at the next codon in the frame
     return ORF_list
 
 
@@ -131,9 +143,9 @@ def find_all_ORFs(dna):
     ['ATGCATGAATGTAG', 'ATGAATGTAG', 'ATG']
     """
     ans = []
-    ORF_1 = find_all_ORFs_oneframe(dna[:]) #returns list
-    ORF_2 = find_all_ORFs_oneframe(dna[1:])
-    ORF_3 = find_all_ORFs_oneframe(dna[2:])
+    ORF_1 = find_all_ORFs_oneframe(dna[:]) #returns list of ORFs in this frame
+    ORF_2 = find_all_ORFs_oneframe(dna[1:]) #Shift over 1 to get ORFs in 2nd frame
+    ORF_3 = find_all_ORFs_oneframe(dna[2:]) #Shift 2 to get ORFs in 3rd frame
 
     ans = ans+ORF_1 #repetitive for debuggin purposes
     ans = ans+ORF_2 #i'ma leave it for clarity's sake though
@@ -152,12 +164,12 @@ def find_all_ORFs_both_strands(dna):
     ['ATGCGAATG', 'ATGCTACATTCGCAT']
     """
     forwardDNA = dna
-    reverseDNA = get_reverse_complement(dna)
+    reverseDNA = get_reverse_complement(dna) #Gives the 3'-5' other strand: bases reversed and complemented
 
-    ans = []
+    ans = [] #list
 
-    ans = ans + find_all_ORFs(forwardDNA)
-    ans = ans + find_all_ORFs(reverseDNA)
+    ans = ans + find_all_ORFs(forwardDNA) #add to the list all ORFs from the original strand
+    ans = ans + find_all_ORFs(reverseDNA) #add to the list all ORFs from the opposite strand
 
     return ans
 
